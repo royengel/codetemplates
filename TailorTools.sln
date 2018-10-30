@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.28010.2046
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TailorTools", "TailorTools\TailorTools.csproj", "{A0F4DDB6-AB3F-4241-9405-72D974C32ED3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TailorTools.Props", "TailorTools.Props\TailorTools.Props.csproj", "{8B0F5DCE-F28B-4F03-9E61-5E63C3D57348}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TailorTools.PropsTests", "TailorTools.PropsTests\TailorTools.PropsTests.csproj", "{D0F24DFF-3D70-443C-9BA4-241FBDD2BDC2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{A0F4DDB6-AB3F-4241-9405-72D974C32ED3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0F4DDB6-AB3F-4241-9405-72D974C32ED3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0F4DDB6-AB3F-4241-9405-72D974C32ED3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B0F5DCE-F28B-4F03-9E61-5E63C3D57348}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0F5DCE-F28B-4F03-9E61-5E63C3D57348}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0F5DCE-F28B-4F03-9E61-5E63C3D57348}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0F5DCE-F28B-4F03-9E61-5E63C3D57348}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0F24DFF-3D70-443C-9BA4-241FBDD2BDC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F24DFF-3D70-443C-9BA4-241FBDD2BDC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0F24DFF-3D70-443C-9BA4-241FBDD2BDC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0F24DFF-3D70-443C-9BA4-241FBDD2BDC2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
