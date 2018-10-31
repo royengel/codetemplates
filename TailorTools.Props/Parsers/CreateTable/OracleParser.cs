@@ -15,5 +15,11 @@ namespace TailorTools.Props.Parsers
                 .Split('.').Select(p => p.Trim()).Last();
         }
 
+        internal override string TryParseType(string type, string arguments, out int length, out int precision)
+        {
+            length = 0;
+            precision = 0;
+            return null;
+        }
     }
 }

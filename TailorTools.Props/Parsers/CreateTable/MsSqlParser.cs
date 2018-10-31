@@ -9,6 +9,7 @@ namespace TailorTools.Props.Parsers
 {
     internal class MsSqlParser : SqlBaseParser
     {
+
         internal override string CleanName(string name)
         {
             return name
@@ -17,5 +18,16 @@ namespace TailorTools.Props.Parsers
                 .Split('.').Select(p => p.Trim()).Last();
         }
 
+        internal override string TryParseType(string type, string arguments, out int length, out int precision)
+        {
+            length = 0;
+            precision = 0;
+            switch (type.ToLower())
+            {
+                case "int":
+                    return typeof(int).ToString();
+            }
+            return null;
+        }
     }
 }
