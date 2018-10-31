@@ -53,7 +53,8 @@ namespace TailorTools.Props.Parsers
             int p = type.IndexOf("(");
             if (p >= 0)
             {
-                typeArgument = type.GetBetween("(", ")", ref p);
+                int x = p;
+                typeArgument = type.GetBetween("(", ")", ref x);
                 type = type.Substring(0, p).SmartTrim();
             }
             else
@@ -65,7 +66,27 @@ namespace TailorTools.Props.Parsers
             property.Length = length;
             property.Precision = precision;
 
+            property.Nullable = column.ToLower().IndexOf("not null") == -1;
+
             return property;
+        }
+
+        protected static void ParseLengthAndPrecision(string arguments, out int length, out int precision)
+        {
+            int[] args = arguments.ToLower().Replace(" char", "")
+                .Split(',').Select(s =>
+            {
+                int.TryParse(s, out int n);
+                return n;
+            }).ToArray();
+            if (args.Length >= 1)
+                length = args[0];
+            else
+                length = 0;
+            if (args.Length >= 2)
+                precision = args[1];
+            else
+                precision = 0;
         }
 
         internal abstract string TryParseType(string type, string arguments, out int length, out int precision);
