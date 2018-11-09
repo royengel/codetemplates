@@ -23,7 +23,11 @@ namespace TailorTools.Props.Parsers
                 c.Name = null;
 
             at--;
+
             string columns = script.GetBetween("(", ")", ref at);
+            if (string.IsNullOrEmpty(columns))
+                return c;
+
             List<Property> properties = new List<Property>();
             foreach(var column in columns.SmartSplit(","))
             {
@@ -47,6 +51,8 @@ namespace TailorTools.Props.Parsers
             property.Name = tokens[0].SmartTrim();
             if (string.IsNullOrEmpty(property.Name))
                 return null;
+            if (property.Name.ToLower() == "agrtid")
+                return null;
 
             string type = tokens[1];
             string typeArgument = "";
@@ -63,6 +69,10 @@ namespace TailorTools.Props.Parsers
             }
 
             property.Type = TryParseType(type, typeArgument, out int length, out int precision);
+
+            if (string.IsNullOrEmpty(property.Type))
+                return null;
+
             property.Length = length;
             property.Precision = precision;
 

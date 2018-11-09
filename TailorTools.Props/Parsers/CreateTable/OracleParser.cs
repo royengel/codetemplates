@@ -23,21 +23,21 @@ namespace TailorTools.Props.Parsers
                 case "number":
                     return TryParseNumber(arguments, length, precision);
                 case "varchar2":
-                    return typeof(string).ToString();
+                    return "string";
                 case "char2":
-                    return typeof(string).ToString();
+                    return "string";
                 case "clob":
                     length = -1;
-                    return typeof(string).ToString();
+                    return "string";
                 case "blob":
                     length = -1;
-                    return typeof(byte[]).ToString();
+                    return "byte[]";
                 case "raw":
                     if(length == 16)
-                        return typeof(Guid).ToString();
-                    return typeof(byte[]).ToString();
+                        return "Guid";
+                    return "byte[]";
                 case "date":
-                    return typeof(DateTime).ToString();
+                    return "DateTime";
             }
             return null;
         }
@@ -47,19 +47,19 @@ namespace TailorTools.Props.Parsers
             if (precision == 0)
             {
                 if (length > 15)
-                    return typeof(long).ToString();
+                    return "long";
                 if (length > 5)
-                    return typeof(int).ToString();
+                    return "int";
                 if (length > 3)
-                    return typeof(short).ToString();
+                    return "short";
                 if (length > 1)
-                    return typeof(byte).ToString();
+                    return "byte";
                 if (length > 0)
-                    return typeof(bool).ToString();
+                    return "bool";
             }
             else
             {
-                return typeof(decimal).ToString();
+                return "decimal";
             }
             return null;
         }

@@ -5,9 +5,14 @@ using TailorTools.Props.Parsers;
 
 namespace TailorTools.Props
 {
-    public class Converter
+    public interface IConverter
     {
-        public static Class ClassFromScript(string script)
+        Class ClassFromScript(string script);
+    }
+
+    public class Converter : IConverter
+    {
+        public Class ClassFromScript(string script)
         {
             var results = new List<Class>();
             MsSqlParser msSqlParser = new MsSqlParser();

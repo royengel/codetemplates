@@ -15,7 +15,8 @@ namespace TailorTools.Props.Parsers
             return name
                 .Replace("[", "")
                 .Replace("]", "")
-                .Split('.').Select(p => p.Trim()).Last();
+                .Split('.')
+                .Select(p => p.Trim()).Last();
         }
 
         internal override string TryParseType(string type, string arguments, out int length, out int precision)
@@ -33,31 +34,31 @@ namespace TailorTools.Props.Parsers
             switch (type.ToLower())
             {
                 case "bigint":
-                    return typeof(long).ToString();
+                    return "long";
                 case "int":
-                    return typeof(int).ToString();
+                    return "int";
                 case "smallint":
-                    return typeof(short).ToString();
+                    return "short";
                 case "tinyint":
-                    return typeof(byte).ToString();
+                    return "byte";
                 case "bit":
-                    return typeof(bool).ToString();
+                    return "bool";
                 case "nvarchar":
-                    return typeof(string).ToString();
+                    return "string";
                 case "varchar":
-                    return typeof(string).ToString();
+                    return "string";
                 case "nchar":
-                    return typeof(string).ToString();
+                    return "string";
                 case "char":
-                    return typeof(string).ToString();
+                    return "string";
                 case "varbinary":
-                    return typeof(byte[]).ToString();
+                    return "byte[]";
                 case "uniqueidentifier":
-                    return typeof(Guid).ToString();
+                    return "Guid";
                 case "datetime":
-                    return typeof(DateTime).ToString();
+                    return "DateTime";
                 case "decimal":
-                    return typeof(decimal).ToString();
+                    return "decimal";
             }
             return null;
         }
