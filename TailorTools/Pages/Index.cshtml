@@ -11,13 +11,23 @@
 </div>
 <div class="container">
     <div class="row">
-        <div class="col-lg-6">
-            <h1>DTO</h1>
-            <div id="classMeta"></div>
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">DTO</div>
+                <div class="panel-body" id="classDTO"></div>
+            </div>
         </div>
-        <div class="col-lg-6">
-            <h1>Insert</h1>
-            <div id="selectInsert"></div>
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">Create table</div>
+                <div class="panel-body" id="selectInsert"></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">Select Insert statements</div>
+                <div class="panel-body" id="createTable"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -42,11 +52,13 @@
             }
 
             function handeClassMetaData(classMeta) {
-                var div = document.getElementById('classMeta');
-                var selectInsert = document.getElementById('selectInsert');
+                var classDTO = document.getElementById('classDTO'),
+                    createTable = document.getElementById('createTable'),
+                    selectInsert = document.getElementById('selectInsert');
 
-                div.innerHTML = templateCreateClass(classMeta);
+                classDTO.innerHTML = templateCreateClass(classMeta);
                 selectInsert.innerHTML = templateSelectInsert(classMeta);
+                createTable.innerHTML = templateCreateTable(classMeta);
             }
 
             function templateCreateClass(classMeta) {
@@ -95,6 +107,79 @@
 
                 return s.join('');
             }
+
+            function templateCreateTable(classMeta) {
+                var s = [],
+                    lf = '<br>',
+                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;',
+                    defaultValue = function (p) {
+                        switch (p.type) {
+                            case "long":
+                                return "0";
+                            case "int":
+                                return "0";
+                            case "short":
+                                return "0";
+                            case "byte":
+                                return "0";
+                            case "bool":
+                                return "0";
+                            case "string":
+                                return "''";
+                            case "byte[]":
+                                return "''";
+                            case "Guid":
+                                return "NewId()";
+                            case "DateTime":
+                                return "CONVERT(datetime, '19000101')";
+                            case "decimal":
+                                return "0.0";
+                            default:
+                                return "";
+                        }
+                    },
+                    sqlServerType = function (p) {
+                        switch (p.type) {
+                            case "long":
+                                return "bigint";
+                            case "int":
+                                return "int";
+                            case "short":
+                                return "smallint";
+                            case "byte":
+                                return "tinyint";
+                            case "bool":
+                                return "bit";
+                            case "string":
+                                return "nvarchar(" + p.length + ")";
+                            case "byte[]":
+                                return "varbinary(max)";
+                            case "Guid":
+                                return "uniqueidentifier";
+                            case "DateTime":
+                                return "datetime";
+                            case "decimal":
+                                return "decimal(" + p.length + "," + p.precision + ")";
+                            default:
+                                return "void";
+                        }
+                    };
+                s.push("CREATE TABLE " + classMeta.name + " (" + lf);
+                for (var i = 0; i < classMeta.properties.length; i++) {
+                    s.push(tab);
+                    s.push(classMeta.properties[i].name);
+                    s.push(' ');
+                    s.push(sqlServerType(classMeta.properties[i]));
+                    if (classMeta.properties[i].nullable === false) {
+                        s.push(' NOT NULL DEFAULT ' + defaultValue(classMeta.properties[i]));
+                    }
+                    if (i + 1 < classMeta.properties.length)
+                        s.push(',' + lf);
+                }
+                s.push(")" + lf);
+                return s.join('');
+            }
+
 
 
         </script>
