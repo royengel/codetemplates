@@ -28,7 +28,7 @@ namespace TailorTools.PropsTests
         [Theory]
         [InlineData(@"CREATE TABLE ""AGRM7"".""table1"" (""column1"" NUMBER(15, 0) DEFAULT 0 NOT NULL ENABLE);")]
         [InlineData(@"CREATE TABLE [dbo].[table1]([column1] [int] NOT NULL)")]
-        //[InlineData(@"public class table1 { public int column1 { get; set; } }")]
+        [InlineData(@"public class table1 { public int column1 { get; set; } }")]
         public void WhenInt_IntPropertyGotParsed(string script)
         {
             Class c = Converter.ClassFromScript(script);
@@ -75,6 +75,23 @@ namespace TailorTools.PropsTests
         {
             TestProperty($@"CREATE TABLE ""AGRM7"".""table1"" (""column1"" {type});", expectedType, length, precision, nullable);
         }
+
+        [Theory]
+        [InlineData("Int64", "long", 0, 0, false)]
+        [InlineData("Int32", "int", 0, 0, false)]
+        [InlineData("Int16", "short", 0, 0, false)]
+        [InlineData("byte", "byte", 0, 0, false)]
+        [InlineData("Boolean", "bool", 0, 0, false)]
+        [InlineData("String", "string", 25, 0, false)]
+        [InlineData("byte[]", "byte[]", -1, 0, false)]
+        [InlineData("Guid", "Guid", 0, 0, false)]
+        [InlineData("Decimal", "decimal", 28, 3, false)]
+        [InlineData("DateTime", "DateTime", 0, 0, false)]
+        public void WhenParse_ClassGetsColumnsRight(string type, string expectedType, int length, int precision, bool nullable)
+        {
+            TestProperty("public class table1 { public " + type + " column1 { get; set; } }", expectedType, length, precision, nullable);
+        }
+
 
         private void TestProperty(string script, string expectedType, int length, int precision, bool nullable)
         {
