@@ -6,11 +6,20 @@
 
 
 <div class="container">
-    Paste your meta data here:
-    <textarea id="txtScript" rows="2" onchange="parseScript()"></textarea>
+    
 </div>
 <div class="container">
     <div class="row">
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">Put your meta data here:</div>
+                <div class="panel-body" id="pasteMeta">
+                    <textarea id="txtScript" autofocus onfocus="this.select();" rows="15" 
+                              onkeyup="if(event.keyCode==13) parseScript();"
+                              onchange="parseScript();">Paste your C# DTO class or sql "CREATE TABLE" script here...</textarea>
+                </div>
+            </div>
+        </div>
         <div class="col-lg-4">
             <div class="panel panel-default">
                 <div class="panel-heading">DTO</div>
@@ -23,14 +32,14 @@
                 <div class="panel-body" id="selectInsert"></div>
             </div>
         </div>
+    </div>
+    <div class="row">
         <div class="col-lg-4">
             <div class="panel panel-default">
                 <div class="panel-heading">Select Insert statements</div>
                 <div class="panel-body" id="createTable"></div>
             </div>
         </div>
-    </div>
-    <div class="row">
         <div class="col-lg-4">
             <div class="panel panel-default">
                 <div class="panel-heading">C# Insert</div>
@@ -41,12 +50,6 @@
             <div class="panel panel-default">
                 <div class="panel-heading">C# Set sql parameters</div>
                 <div class="panel-body" id="csSetParameters"></div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="panel panel-default">
-                <div class="panel-heading"></div>
-                <div class="panel-body" id="csNotImplemented1"></div>
             </div>
         </div>
     </div>
@@ -74,6 +77,10 @@
     @section Scripts
         {
         <script>
+            document.onload = function init() {
+                document.getElementById("txtScript").select();
+            }
+
             function parseScript() {
                 var txtScript = document.getElementById('txtScript');
                 var xmlhttp = new XMLHttpRequest();
