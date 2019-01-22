@@ -30,6 +30,46 @@
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">C# Insert</div>
+                <div class="panel-body" id="csInsert"></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">C# Set sql parameters</div>
+                <div class="panel-body" id="csSetParameters"></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading"></div>
+                <div class="panel-body" id="csNotImplemented1"></div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">C# SqlBulkCopy column mappings</div>
+                <div class="panel-body" id="csColumnMappings"></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">C# enumerator GetValue switch</div>
+                <div class="panel-body" id="csEnumeratorSwitch"></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">C# enumerator GetOrdinal switch</div>
+                <div class="panel-body" id="csEnumeratorOrdinal"></div>
+            </div>
+        </div>
+    </div>
 </div>
     @section Scripts
         {
@@ -54,11 +94,90 @@
             function handeClassMetaData(classMeta) {
                 var classDTO = document.getElementById('classDTO'),
                     createTable = document.getElementById('createTable'),
-                    selectInsert = document.getElementById('selectInsert');
+                    selectInsert = document.getElementById('selectInsert'),
+                    csInsert = document.getElementById('csInsert'),
+                    csSetParameters = document.getElementById('csSetParameters'),
+                    csColumnMappings = document.getElementById('csColumnMappings'),
+                    csEnumeratorOrdinal = document.getElementById('csEnumeratorOrdinal'),
+                    csEnumeratorSwitch = document.getElementById('csEnumeratorSwitch');
 
                 classDTO.innerHTML = templateCreateClass(classMeta);
                 selectInsert.innerHTML = templateSelectInsert(classMeta);
                 createTable.innerHTML = templateCreateTable(classMeta);
+                csInsert.innerHTML = templateInsertDTO(classMeta);
+                csSetParameters.innerHTML = '';
+                csColumnMappings.innerHTML = templateBulkCopyColumnMappings(classMeta);
+                csEnumeratorOrdinal.innerHTML = templateEnumeratorOrdinal(classMeta);
+                csEnumeratorSwitch.innerHTML = templateEnumeratorSwitch(classMeta);
+            }
+
+            function propertyList(classMeta, prefix, postfix, separator) {
+                var s = [];
+                for (var i = 0; i < classMeta.properties.length; i++) {
+                    if (prefix)
+                        s.push(prefix);
+                    s.push(classMeta.properties[i].name);
+                    if (postfix)
+                        s.push(postfix);
+                    if (i + 1 < classMeta.properties.length)
+                        s.push(separator);
+                }
+                return s.join('');
+            }
+
+            function templateInsertDTO(classMeta) {
+                var s = [],
+                    lf = '<br>',
+                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;';
+                s.push(tab + 'var sql = @@"INSERT INTO ' + classMeta.name + ' (' + lf);
+                s.push(propertyList(classMeta, tab + tab + tab, null, ',' + lf));
+                s.push(')' + lf);
+                s.push(tab + tab + 'VALUES (' + lf);
+                s.push(propertyList(classMeta, tab + tab + tab + '@@', null, ',' + lf));
+                s.push(')";' + lf);
+                return s.join('');
+            }
+
+            function templateBulkCopyColumnMappings(classMeta) {
+                var s = [],
+                    lf = '<br>';
+                for (var i = 0; i < classMeta.properties.length; i++) {
+                    s.push('bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("');
+                    s.push(classMeta.properties[i].name);
+                    s.push('", "');
+                    s.push(classMeta.properties[i].name);
+                    s.push('"));' + lf);
+                }
+                s.push('}' + lf);
+                return s.join('');
+            }
+
+            function templateEnumeratorSwitch(classMeta) {
+                var s = [],
+                    lf = '<br>',
+                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;';
+                s.push(tab + 'switch (i)' + lf);
+                s.push(tab + '{' + lf);
+                for (var i = 0; i < classMeta.properties.length; i++) {
+                    s.push(tab + tab + 'case ' + i + ':' + lf);
+                    s.push(tab + tab + tab + 'return _enumerator.Current.' + classMeta.properties[i].name + ';' + lf);
+                }
+                s.push(tab + '}' + lf);
+                return s.join('');
+            }
+
+            function templateEnumeratorOrdinal(classMeta) {
+                var s = [],
+                    lf = '<br>',
+                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;';
+                s.push(tab + 'switch (name)' + lf);
+                s.push(tab + '{' + lf);
+                for (var i = 0; i < classMeta.properties.length; i++) {
+                    s.push(tab + tab + 'case "' + classMeta.properties[i].name + '":' + lf);
+                    s.push(tab + tab + tab + 'return ' + i + ';' + lf);
+                }
+                s.push(tab + '}' + lf);
+                return s.join('');
             }
 
             function templateCreateClass(classMeta) {
@@ -67,14 +186,14 @@
                     tab = '&nbsp;&nbsp;&nbsp;&nbsp;';
                 s.push('public class ' + classMeta.name);
                 s.push(lf);
-                s.push('{' + lf)
+                s.push('{' + lf);
                 for (var i = 0; i < classMeta.properties.length; i++) {
                     s.push(tab + 'public ');
                     s.push(classMeta.properties[i].type + ' ');
                     s.push(classMeta.properties[i].name);
-                    s.push(' { get; set; }' + lf)
+                    s.push(' { get; set; }' + lf);
                 }
-                s.push('}' + lf)
+                s.push('}' + lf);
                 return s.join('');
             }
 
