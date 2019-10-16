@@ -59,6 +59,8 @@ namespace TailorTools.Props.Parsers
                     return "DateTime";
                 case "decimal":
                     return "decimal";
+                case "numeric":
+                    return "decimal";
             }
             return null;
         }

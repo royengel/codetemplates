@@ -52,6 +52,7 @@ namespace TailorTools.PropsTests
         [InlineData("[varbinary](max)", "byte[]", -1, 0, true)]
         [InlineData("[uniqueidentifier]", "Guid", 0, 0, true)]
         [InlineData("[decimal](28, 3)", "decimal", 28, 3, true)]
+        [InlineData("[numeric](28, 3)", "decimal", 28, 3, true)]
         [InlineData("[datetime]", "DateTime", 0, 0, true)]
         public void WhenParse_MsSqlGetsColumnsRight(string type, string expectedType, int length, int precision, bool nullable)
         {
