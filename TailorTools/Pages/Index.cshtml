@@ -28,12 +28,18 @@
         </div>
         <div class="col-lg-4">
             <div class="panel panel-default">
-                <div class="panel-heading">Create table</div>
-                <div class="panel-body" id="createTable"></div>
+                <div class="panel-heading">C# Sql decorated DTO</div>
+                <div class="panel-body" id="csSqlDecoratedDTO"></div>
             </div>
         </div>
     </div>
     <div class="row">
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">Create table</div>
+                <div class="panel-body" id="createTable"></div>
+            </div>
+        </div>
         <div class="col-lg-4">
             <div class="panel panel-default">
                 <div class="panel-heading">Select Insert statements</div>
@@ -46,20 +52,8 @@
                 <div class="panel-body" id="csInsert"></div>
             </div>
         </div>
-        <div class="col-lg-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">C# Set sql parameters</div>
-                <div class="panel-body" id="csSetParameters"></div>
-            </div>
-        </div>
     </div>
     <div class="row">
-        <div class="col-lg-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">C# Sql decorated DTO</div>
-                <div class="panel-body" id="csSqlDecoratedDTO"></div>
-            </div>
-        </div>
     </div>
     <div class="row">
         <div class="col-lg-4">
@@ -111,7 +105,6 @@
                     createTable = document.getElementById('createTable'),
                     selectInsert = document.getElementById('selectInsert'),
                     csInsert = document.getElementById('csInsert'),
-                    csSetParameters = document.getElementById('csSetParameters'),
                     csColumnMappings = document.getElementById('csColumnMappings'),
                     csEnumeratorOrdinal = document.getElementById('csEnumeratorOrdinal'),
                     csEnumeratorSwitch = document.getElementById('csEnumeratorSwitch'),
@@ -121,7 +114,6 @@
                 selectInsert.innerHTML = templateSelectInsert(classMeta);
                 createTable.innerHTML = templateCreateTable(classMeta);
                 csInsert.innerHTML = templateInsertDTO(classMeta);
-                csSetParameters.innerHTML = '';
                 csColumnMappings.innerHTML = templateBulkCopyColumnMappings(classMeta);
                 csEnumeratorOrdinal.innerHTML = templateEnumeratorOrdinal(classMeta);
                 csEnumeratorSwitch.innerHTML = templateEnumeratorSwitch(classMeta);
@@ -229,25 +221,32 @@
                 s.push(lf);
                 s.push('{' + lf);
                 for (var i = 0; i < classMeta.properties.length; i++) {
-                    if (i > 0)
-                        s.push(lf);
+                    if (decorate) {
+                        if (i > 0)
+                            s.push(lf);
 
-                    // Field
-                    s.push(tab + 'private ');
-                    s.push(cSharpType(classMeta.properties[i]) + ' _');
-                    s.push(classMeta.properties[i].name);
-                    s.push(defaultValue(classMeta.properties[i]));
-                    s.push(';' + lf);
+                        // Field
+                        s.push(tab + 'private ');
+                        s.push(cSharpType(classMeta.properties[i]) + ' _');
+                        s.push(classMeta.properties[i].name);
+                        s.push(defaultValue(classMeta.properties[i]));
+                        s.push(';' + lf);
 
-                    // Attribute
-                    if (decorate)
+                        // Attribute
                         s.push(tab + decoration(classMeta.properties[i]) + lf);
+                    }
 
                     //Property
                     s.push(tab + 'public ');
                     s.push(cSharpType(classMeta.properties[i]) + ' ');
                     s.push(classMeta.properties[i].name);
-                    s.push(' { get => _' + classMeta.properties[i].name + '; set => _' + classMeta.properties[i].name + ' = value' + sqlPrepare(classMeta.properties[i]) + '; }');
+                    if (decorate) {
+                        s.push(' { get => _' + classMeta.properties[i].name + '; set => _' + classMeta.properties[i].name + ' = value' + sqlPrepare(classMeta.properties[i]) + '; }');
+                    }
+                    else {
+                        s.push(' { get; set; }');
+                    }
+ 
                     s.push(lf);
                 }
                 s.push('}' + lf);
