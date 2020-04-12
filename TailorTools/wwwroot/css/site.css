@@ -45,3 +45,13 @@ body {
     margin: 0;
     background-color: antiquewhite;
 }
+.copy-btn {
+    margin: 0px;
+    padding: 0px;
+    float: right;
+    border: none;
+}
+.copy-btn img {
+    width: 20px;
+    height: 20px;
+}
