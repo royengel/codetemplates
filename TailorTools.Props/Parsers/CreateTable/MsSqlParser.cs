@@ -57,10 +57,16 @@ namespace TailorTools.Props.Parsers
                     return "Guid";
                 case "datetime":
                     return "DateTime";
+                case "datetime2":
+                    return "DateTime";
                 case "decimal":
                     return "decimal";
                 case "numeric":
                     return "decimal";
+                case "timestamp":
+                    return "byte[]";
+                case "rowversion":
+                    return "byte[]";
             }
             return null;
         }

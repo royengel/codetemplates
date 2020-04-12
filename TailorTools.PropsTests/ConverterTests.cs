@@ -51,9 +51,12 @@ namespace TailorTools.PropsTests
         [InlineData("[char](25)", "string", 25, 0, true)]
         [InlineData("[varbinary](max)", "byte[]", -1, 0, true)]
         [InlineData("[uniqueidentifier]", "Guid", 0, 0, true)]
+        [InlineData("[uniqueidentifier] NOT NULL", "Guid", 0, 0, false)]
         [InlineData("[decimal](28, 3)", "decimal", 28, 3, true)]
         [InlineData("[numeric](28, 3)", "decimal", 28, 3, true)]
         [InlineData("[datetime]", "DateTime", 0, 0, true)]
+        [InlineData("[datetime2](7)", "DateTime", 7, 0, true)]
+        [InlineData("[timestamp]", "byte[]", 0, 0, true)]
         public void WhenParse_MsSqlGetsColumnsRight(string type, string expectedType, int length, int precision, bool nullable)
         {
             TestProperty($@"CREATE TABLE [dbo].[table1]([column1] {type})", expectedType, length, precision, nullable);
@@ -84,6 +87,7 @@ namespace TailorTools.PropsTests
         [InlineData("byte", "byte", 0, 0, false)]
         [InlineData("Boolean", "bool", 0, 0, false)]
         [InlineData("String", "string", 25, 0, false)]
+        [InlineData("byte[]", "byte[]", -1, 0, false)]
         [InlineData("byte[]", "byte[]", -1, 0, false)]
         [InlineData("Guid", "Guid", 0, 0, false)]
         [InlineData("Decimal", "decimal", 28, 3, false)]
