@@ -14,7 +14,7 @@
             <div class="panel panel-default">
                 <div class="panel-heading">Put your meta data here:</div>
                 <div class="panel-body" id="pasteMeta">
-                    <textarea id="txtScript" autofocus onfocus="this.select();" rows="15" 
+                    <textarea id="txtScript" autofocus onfocus="this.select();" rows="15"
                               onkeyup="if(event.keyCode==13) parseScript();"
                               onchange="parseScript();">Paste your C# DTO class or sql "CREATE TABLE" script here...</textarea>
                 </div>
@@ -50,6 +50,14 @@
             <div class="panel panel-default">
                 <div class="panel-heading">C# Set sql parameters</div>
                 <div class="panel-body" id="csSetParameters"></div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">C# Sql decorated DTO</div>
+                <div class="panel-body" id="csSqlDecoratedDTO"></div>
             </div>
         </div>
     </div>
@@ -106,9 +114,10 @@
                     csSetParameters = document.getElementById('csSetParameters'),
                     csColumnMappings = document.getElementById('csColumnMappings'),
                     csEnumeratorOrdinal = document.getElementById('csEnumeratorOrdinal'),
-                    csEnumeratorSwitch = document.getElementById('csEnumeratorSwitch');
+                    csEnumeratorSwitch = document.getElementById('csEnumeratorSwitch'),
+                    csSqlDecoratedDTO = document.getElementById('csSqlDecoratedDTO');
 
-                classDTO.innerHTML = templateCreateClass(classMeta);
+                classDTO.innerHTML = templateCreateClass(classMeta, false);
                 selectInsert.innerHTML = templateSelectInsert(classMeta);
                 createTable.innerHTML = templateCreateTable(classMeta);
                 csInsert.innerHTML = templateInsertDTO(classMeta);
@@ -116,6 +125,7 @@
                 csColumnMappings.innerHTML = templateBulkCopyColumnMappings(classMeta);
                 csEnumeratorOrdinal.innerHTML = templateEnumeratorOrdinal(classMeta);
                 csEnumeratorSwitch.innerHTML = templateEnumeratorSwitch(classMeta);
+                csSqlDecoratedDTO.innerHTML = templateCreateClass(classMeta, true);
             }
 
             function propertyList(classMeta, prefix, postfix, separator) {
@@ -187,18 +197,58 @@
                 return s.join('');
             }
 
-            function templateCreateClass(classMeta) {
+            function templateCreateClass(classMeta, decorate) {
                 var s = [],
                     lf = '<br>',
-                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;';
+                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;',
+                    maxLength = function (length) {
+                        return length > 0 ? ', maxLength: ' + length : '';
+                    },
+                    defaultValue = function (prop) {
+                        if (prop.nullable === false) {
+                            if (prop.type == "DateTime")
+                                return ' = new DateTime(1900, 1, 1)';
+                            if (prop.type == "string")
+                                return ' = ""';
+                            if (prop.type == "byte[]")
+                                return ' = new byte[0]';
+                        }
+                        return '';
+                    },
+                    sqlPrepare = function (prop) {
+                        if (prop.type == "string")
+                            return '.SqlPrepare(' + prop.length + ', ' + prop.nullable + ')';
+                        if (prop.type == "DateTime")
+                            return '.SqlPrepare()';
+                        return '';
+                    },
+                    decoration = function (prop) {
+                        return '[A1Field("' + prop.name + '", colType: SqlDbType.' + sqlServerDbType(prop) + maxLength(prop.length) + ', nullable: ' + prop.nullable + ')]';
+                    };
                 s.push('public class ' + classMeta.name);
                 s.push(lf);
                 s.push('{' + lf);
                 for (var i = 0; i < classMeta.properties.length; i++) {
-                    s.push(tab + 'public ');
-                    s.push(classMeta.properties[i].type + ' ');
+                    if (i > 0)
+                        s.push(lf);
+
+                    // Field
+                    s.push(tab + 'private ');
+                    s.push(cSharpType(classMeta.properties[i]) + ' _');
                     s.push(classMeta.properties[i].name);
-                    s.push(' { get; set; }' + lf);
+                    s.push(defaultValue(classMeta.properties[i]));
+                    s.push(';' + lf);
+
+                    // Attribute
+                    if (decorate)
+                        s.push(tab + decoration(classMeta.properties[i]) + lf);
+
+                    //Property
+                    s.push(tab + 'public ');
+                    s.push(cSharpType(classMeta.properties[i]) + ' ');
+                    s.push(classMeta.properties[i].name);
+                    s.push(' { get => _' + classMeta.properties[i].name + '; set => _' + classMeta.properties[i].name + ' = value' + sqlPrepare(classMeta.properties[i]) + '; }');
+                    s.push(lf);
                 }
                 s.push('}' + lf);
                 return s.join('');
@@ -306,6 +356,45 @@
                 return s.join('');
             }
 
+            sqlServerDbType = function (p) {
+                switch (p.type) {
+                    case "long":
+                        return "BigInt";
+                    case "int":
+                        return "Int";
+                    case "short":
+                        return "SmallInt";
+                    case "byte":
+                        return "TinyInt";
+                    case "bool":
+                        return "Bit";
+                    case "string":
+                        return "NVarChar";
+                    case "byte[]":
+                        return "VarBinary";
+                    case "Guid":
+                        return "UniqueIdentifier";
+                    case "DateTime":
+                        return "DateTime";
+                    case "decimal":
+                        return "Decimal";
+                    case "numeric":
+                        return "Decimal";
+                    default:
+                        return "void";
+                }
+            };
+
+            cSharpType = function (p) {
+                switch (p.type) {
+                    case "string":
+                        return p.type;
+                    case "byte[]":
+                        return p.type;
+                    default:
+                        return p.type + (p.nullable === true ? "?" : "");
+                }
+            };
 
 
         </script>
