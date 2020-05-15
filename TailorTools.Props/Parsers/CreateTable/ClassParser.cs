@@ -28,7 +28,7 @@ namespace TailorTools.Props.Parsers
             List<Property> properties = new List<Property>();
             foreach (var propDef in classDef.SmartSplit("\n"))
             {
-                Property property = parseProperty(propDef);
+                Property property = ParseProperty(propDef);
                 if (property != null)
                     properties.Add(property);
             }
@@ -38,7 +38,7 @@ namespace TailorTools.Props.Parsers
             return c;
         }
 
-        private Property parseProperty(string propDef)
+        private Property ParseProperty(string propDef)
         {
             var tokens = propDef.Trim().SmartSplit(" ").ToArray();
             if (tokens.Length < 2)
@@ -75,66 +75,46 @@ namespace TailorTools.Props.Parsers
 
         private int LengthFromType(string type)
         {
-            switch (type)
+            return type switch
             {
-                case "string":
-                    return 25;
-                case "byte[]":
-                    return -1;
-                case "decimal":
-                    return 28;
-            }
-            return 0;
+                "string" => 25,
+                "byte[]" => -1,
+                "decimal" => 28,
+                _ => 0,
+            };
         }
 
         private int PrecisionFromType(string type)
         {
-            switch (type)
+            return type switch
             {
-                case "decimal":
-                    return 3;
-            }
-            return 0;
+                "decimal" => 3,
+                _ => 0,
+            };
         }
 
         private string Istype(string type)
         {
-            switch (type)
+            return type switch
             {
-                case "long":
-                    return "long";
-                case "Int64":
-                    return "long";
-                case "int":
-                    return "int";
-                case "Int32":
-                    return "int";
-                case "short":
-                    return "short";
-                case "Int16":
-                    return "short";
-                case "byte":
-                    return "byte";
-                case "bool":
-                    return "bool";
-                case "Boolean":
-                    return "bool";
-                case "string":
-                    return "string";
-                case "String":
-                    return "string";
-                case "byte[]":
-                    return "byte[]";
-                case "Guid":
-                    return "Guid";
-                case "DateTime":
-                    return "DateTime";
-                case "decimal":
-                    return "decimal";
-                case "Decimal":
-                    return "decimal";
-            }
-            return null;
+                "long" => "long",
+                "Int64" => "long",
+                "int" => "int",
+                "Int32" => "int",
+                "short" => "short",
+                "Int16" => "short",
+                "byte" => "byte",
+                "bool" => "bool",
+                "Boolean" => "bool",
+                "string" => "string",
+                "String" => "string",
+                "byte[]" => "byte[]",
+                "Guid" => "Guid",
+                "DateTime" => "DateTime",
+                "decimal" => "decimal",
+                "Decimal" => "decimal",
+                _ => null,
+            };
         }
 
     }

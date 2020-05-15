@@ -31,44 +31,27 @@ namespace TailorTools.Props.Parsers
                 ParseLengthAndPrecision(arguments, out length, out precision);
             }
 
-            switch (type.ToLower())
+            return (type.ToLower()) switch
             {
-                case "bigint":
-                    return "long";
-                case "int":
-                    return "int";
-                case "smallint":
-                    return "short";
-                case "tinyint":
-                    return "byte";
-                case "bit":
-                    return "bool";
-                case "nvarchar":
-                    return "string";
-                case "varchar":
-                    return "string";
-                case "nchar":
-                    return "string";
-                case "char":
-                    return "string";
-                case "varbinary":
-                    return "byte[]";
-                case "uniqueidentifier":
-                    return "Guid";
-                case "datetime":
-                    return "DateTime";
-                case "datetime2":
-                    return "DateTime";
-                case "decimal":
-                    return "decimal";
-                case "numeric":
-                    return "decimal";
-                case "timestamp":
-                    return "byte[]";
-                case "rowversion":
-                    return "byte[]";
-            }
-            return null;
+                "bigint" => "long",
+                "int" => "int",
+                "smallint" => "short",
+                "tinyint" => "byte",
+                "bit" => "bool",
+                "nvarchar" => "string",
+                "varchar" => "string",
+                "nchar" => "string",
+                "char" => "string",
+                "varbinary" => "byte[]",
+                "uniqueidentifier" => "Guid",
+                "datetime" => "DateTime",
+                "datetime2" => "DateTime",
+                "decimal" => "decimal",
+                "numeric" => "decimal",
+                "timestamp" => "byte[]",
+                "rowversion" => "byte[]",
+                _ => null,
+            };
         }
     }
 }

@@ -8,7 +8,7 @@ namespace TailorTools.PropsTests
 {
     public class ConverterTests
     {
-        private Converter Converter;
+        private readonly Converter Converter;
         public ConverterTests()
         {
             Converter = new Converter();
@@ -87,7 +87,6 @@ namespace TailorTools.PropsTests
         [InlineData("byte", "byte", 0, 0, false)]
         [InlineData("Boolean", "bool", 0, 0, false)]
         [InlineData("String", "string", 25, 0, false)]
-        [InlineData("byte[]", "byte[]", -1, 0, false)]
         [InlineData("byte[]", "byte[]", -1, 0, false)]
         [InlineData("Guid", "Guid", 0, 0, false)]
         [InlineData("Decimal", "decimal", 28, 3, false)]
