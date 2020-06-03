@@ -6,7 +6,7 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="panel panel-default">
                 <div class="panel-heading">Put your sql query here:</div>
                 <div class="panel-body" id="pasteMeta">
@@ -16,16 +16,28 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    TSql
-                    <button class="copy-btn" data-clipboard-target="#classDTO">
+                    Create table from select
+                    <button class="copy-btn" data-clipboard-target="#createQuery">
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="classDTO"></div>
+                <div class="panel-body" id="createQuery"></div>
                 <div style="font-weight: bold; font-style: italic;">...bring the results from this TSQL, back to Templates.</div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Insert into from select
+                    <button class="copy-btn" data-clipboard-target="#insertQuery">
+                        <img src="images/clipboard.svg" alt="Copy to clipboard">
+                    </button>
+                </div>
+                <div class="panel-body" id="insertQuery"></div>
+                <div style="font-weight: bold; font-style: italic;">...select your insert statements with this query.</div>
             </div>
         </div>
     </div>
@@ -38,12 +50,82 @@
         }
 
         function makeScript() {
-            var classDTO = document.getElementById('classDTO'),
+            var createQuery = document.getElementById('createQuery'),
+                insertQuery = document.getElementById('insertQuery'),
                 txtScript = document.getElementById('txtScript');
-            classDTO.innerHTML = script(txtScript.value);
+            createQuery.innerHTML = createQueryScript(txtScript.value);
+            insertQuery.innerHTML = createInsertScript(txtScript.value);
         }
 
-        function script(select) {
+        function createQueryScript(select) {
+            var s = [],
+                lf = '<br>';
+            s.push("declare @@select nvarchar(max);" + lf);
+            s.push("select @@select = N'" + select.replace("'", "''") + "';" + lf);
+            s.push(lf);
+            s.push(columnsTable());
+            s.push(lf);
+            s.push("insert into @@columns" + lf);
+            s.push("EXEC sp_describe_first_result_set @@select" + lf);
+            s.push(lf);
+            s.push("declare @@tableName nvarchar(128);" + lf);
+            s.push("select @@tableName = N'TableName';" + lf);
+            s.push(lf);
+            s.push("SELECT ' create table ' + @@tableName + ' ( ' " + lf);
+            s.push("	+ STUFF(( " + lf);
+            s.push("		select ', ' + name + ' ' + system_type_name + case when is_nullable = 0 then ' not' else ' ' end + ' null' from @@columns " + lf);
+            s.push("		FOR XML PATH ('') ), 1, 1, '' ) " + lf);
+            s.push("	+ ')'" + lf);
+            s.push("from @@columns group by is_hidden" + lf);
+
+            return s.join('');
+        }
+
+        function createInsertScript(select) {
+            var s = [],
+                lf = '<br>';
+            s.push("declare @@select nvarchar(max);" + lf);
+            s.push("select @@select = N'" + select.replace("'", "''") + "';" + lf);
+            s.push(lf);
+            s.push(columnsTable());
+            s.push("declare @@tableName nvarchar(128);" + lf);
+            s.push("declare @@columnList nvarchar(max);" + lf);
+            s.push("declare @@selectList nvarchar(max);" + lf);
+            s.push("declare @@query nvarchar(max);" + lf);
+            s.push(lf);
+            s.push("insert into @@columns" + lf);
+            s.push("exec sp_describe_first_result_set @@select, null, 1;" + lf);
+            s.push(lf);
+            s.push("select TOP 1  @@tableName = '[' + source_schema + '].[' + source_table + ']' FROM @@columns;" + lf);
+            s.push(lf);
+            s.push("delete from @@columns " + lf);
+            s.push("where name = 'agrtid' " + lf);
+            s.push("or system_type_name = 'timestamp'" + lf);
+            s.push("or system_type_name = 'rowversion';" + lf);
+            s.push(lf);
+            s.push("select @@columnList = STUFF((" + lf);
+            s.push("select ', [' + name + ']' from @@columns" + lf);
+            s.push("FOR XML PATH ('') ), 1, 1, '' )" + lf);
+            s.push(lf);
+            s.push("select @@selectList = STUFF((" + lf);
+            s.push("select ', ' + case" + lf);
+            s.push("when system_type_name like '%varchar%' then ''' + coalesce(''N'''''' + ' + name + ' + '''''''', ''null'') + '''" + lf);
+            s.push("when system_type_name like '%char%' then ''' + coalesce(''N'''''' + rtrim(' + name + ') + '''''''', ''null'') + '''" + lf);
+            s.push("when system_type_name like 'date%' then ''' + coalesce('''''''' + CONVERT(varchar, ' + name + ', 127) + '''''''', ''null'') + '''" + lf);
+            s.push("else ''' + coalesce( + CONVERT(varchar, ' + name + '), ''null'') + ''' end" + lf);
+            s.push("from @@columns" + lf);
+            s.push("FOR XML PATH ('') ), 1, 1, '' )" + lf);
+            s.push(lf);
+            s.push("select @@query = 'select ''insert into ' + @@tableName + ' (' + @@columnList + ') values (' + @@selectList + ')'' from (' + @@select + ') a';" + lf);
+            s.push("print @@query;" + lf);
+            s.push(lf);
+            s.push("exec (@@query);" + lf);
+
+            return s.join('');
+        }
+
+
+        function columnsTable() {
             var s = [],
                 lf = '<br>';
 
@@ -89,22 +171,6 @@
             s.push("	tds_collation_id int," + lf);
             s.push("	tds_collation_sort_id int" + lf);
             s.push(")" + lf);
-            s.push("declare @@tableName nvarchar(128);" + lf);
-            s.push("declare @@select nvarchar(max);" + lf);
-            s.push("" + lf);
-            s.push("select @@tableName = N'TableName';" + lf);
-            s.push("" + lf);
-            s.push("select @@select = N'" + select + "';" + lf);
-            s.push("" + lf);
-            s.push("insert into @@columns" + lf);
-            s.push("EXEC sp_describe_first_result_set @@select" + lf);
-            s.push("" + lf);
-            s.push("SELECT ' create table ' + @@tableName + ' ( ' " + lf);
-            s.push("	+ STUFF(( " + lf);
-            s.push("		select ', ' + name + ' ' + system_type_name + case when is_nullable = 0 then ' not' else ' ' end + ' null' from @@columns " + lf);
-            s.push("		FOR XML PATH ('') ), 1, 1, '' ) " + lf);
-            s.push("	+ ')'" + lf);
-            s.push("from @@columns group by is_hidden" + lf);
 
             return s.join('');
         }
