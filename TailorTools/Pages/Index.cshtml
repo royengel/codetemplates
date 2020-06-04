@@ -24,7 +24,7 @@
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="classDTO"></div>
+                <pre class="panel-body" id="classDTO"></pre>
             </div>
         </div>
         <div class="col-lg-4">
@@ -35,7 +35,7 @@
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="csSqlDecoratedDTO"></div>
+                <pre class="panel-body" id="csSqlDecoratedDTO"></pre>
             </div>
         </div>
     </div>
@@ -48,7 +48,7 @@
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="createTable"></div>
+                <pre class="panel-body" id="createTable"></pre>
             </div>
         </div>
         <div class="col-lg-4">
@@ -59,7 +59,7 @@
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="selectInsert"></div>
+                <pre class="panel-body" id="selectInsert"></pre>
             </div>
         </div>
         <div class="col-lg-4">
@@ -70,7 +70,7 @@
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="csInsert"></div>
+                <pre class="panel-body" id="csInsert"></pre>
             </div>
         </div>
     </div>
@@ -85,7 +85,7 @@
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="csColumnMappings"></div>
+                <pre class="panel-body" id="csColumnMappings"></pre>
             </div>
         </div>
         <div class="col-lg-4">
@@ -96,7 +96,7 @@
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="csEnumeratorSwitch"></div>
+                <pre class="panel-body" id="csEnumeratorSwitch"></pre>
             </div>
         </div>
         <div class="col-lg-4">
@@ -107,7 +107,7 @@
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="csEnumeratorOrdinal"></div>
+                <pre class="panel-body" id="csEnumeratorOrdinal"></pre>
             </div>
         </div>
     </div>
@@ -173,7 +173,7 @@
             function templateInsertDTO(classMeta) {
                 var s = [],
                     lf = '<br>',
-                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;';
+                    tab = '    ';
                 s.push(tab + 'var sql = @@"INSERT INTO ' + classMeta.name + ' (' + lf);
                 s.push(propertyList(classMeta, tab + tab + tab, null, ',' + lf));
                 s.push(')' + lf);
@@ -200,7 +200,7 @@
             function templateEnumeratorSwitch(classMeta) {
                 var s = [],
                     lf = '<br>',
-                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;';
+                    tab = '    ';
                 s.push(tab + 'switch (i)' + lf);
                 s.push(tab + '{' + lf);
                 for (var i = 0; i < classMeta.properties.length; i++) {
@@ -214,7 +214,7 @@
             function templateEnumeratorOrdinal(classMeta) {
                 var s = [],
                     lf = '<br>',
-                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;';
+                    tab = '    ';
                 s.push(tab + 'switch (name)' + lf);
                 s.push(tab + '{' + lf);
                 for (var i = 0; i < classMeta.properties.length; i++) {
@@ -228,7 +228,7 @@
             function templateCreateClass(classMeta, decorate) {
                 var s = [],
                     lf = '<br>',
-                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;',
+                    tab = '    ',
                     maxLength = function (length) {
                         return length > 0 ? ', maxLength: ' + length : '';
                     },
@@ -322,7 +322,7 @@
             function templateCreateTable(classMeta) {
                 var s = [],
                     lf = '<br>',
-                    tab = '&nbsp;&nbsp;&nbsp;&nbsp;',
+                    tab = '    ',
                     defaultValue = function (p) {
                         switch (p.type) {
                             case "long":

@@ -13,6 +13,9 @@ namespace TailorTools.Props.Parsers
         {
             Class c = new Class();
 
+            if (string.IsNullOrWhiteSpace(script))
+                return c;
+
             int at = 0;
             string className = script.GetBetween("class ", "{", ref at);
             if (string.IsNullOrWhiteSpace(className) || className.Trim().Contains(" "))

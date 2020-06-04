@@ -13,6 +13,9 @@ namespace TailorTools.Props.Parsers
         {
             Class c = new Class();
 
+            if (string.IsNullOrEmpty(script))
+                return c;
+
             int at = 0;
             string createTable = script.GetBetween("create table ", "(", ref at);
             if (string.IsNullOrEmpty(createTable))

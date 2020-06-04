@@ -1,14 +1,13 @@
 ﻿@page
-@model ContactModel
+@model CreateFromSelectModel
 @{
+    ViewData["Title"] = "Select Templates";
 }
-<h2>Create a "sql CREATE TABLE script from a select query" generator...</h2>
-
 <div class="container">
     <div class="row">
         <div class="col-lg-4">
             <div class="panel panel-default">
-                <div class="panel-heading">Put your sql query here:</div>
+                <div class="panel-heading">Put your select here:</div>
                 <div class="panel-body" id="pasteMeta">
                     <textarea id="txtScript" autofocus onfocus="this.select();" rows="15"
                               onkeyup="if(event.keyCode==13) makeScript();"
@@ -24,8 +23,8 @@
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="createQuery"></div>
-                <div style="font-weight: bold; font-style: italic;">...bring the results from this TSQL, back to Templates.</div>
+                <pre class="panel-body" id="createQuery"></pre>
+                <div style="font-style: italic; padding: 6px;">...bring the results from this TSQL, back to Templates.</div>
             </div>
         </div>
         <div class="col-lg-4">
@@ -36,8 +35,8 @@
                         <img src="images/clipboard.svg" alt="Copy to clipboard">
                     </button>
                 </div>
-                <div class="panel-body" id="insertQuery"></div>
-                <div style="font-weight: bold; font-style: italic;">...select your insert statements with this query.</div>
+                <pre class="panel-body" id="insertQuery"></pre>
+                <div style="font-style: italic; padding: 6px;">...select your insert statements with this query.</div>
             </div>
         </div>
     </div>
@@ -94,29 +93,35 @@
             s.push("declare @@query nvarchar(max);" + lf);
             s.push(lf);
             s.push("insert into @@columns" + lf);
-            s.push("exec sp_describe_first_result_set @@select, null, 1;" + lf);
+            s.push("    exec sp_describe_first_result_set @@select, null, 1;" + lf);
             s.push(lf);
-            s.push("select TOP 1  @@tableName = '[' + source_schema + '].[' + source_table + ']' FROM @@columns;" + lf);
+            s.push("select top 1  @@tableName = '[' + source_schema + '].[' + source_table + ']' from @@columns where source_table is not null;" + lf);
+            s.push("if @@tableName is null" + lf);
+            s.push("begin" + lf);
+            s.push("    select @@tableName = 'table1';" + lf);
+            s.push("end;" + lf);
+            s.push("print @@tableName;" + lf);
             s.push(lf);
             s.push("delete from @@columns " + lf);
-            s.push("where name = 'agrtid' " + lf);
-            s.push("or system_type_name = 'timestamp'" + lf);
-            s.push("or system_type_name = 'rowversion';" + lf);
+            s.push("    where name = 'agrtid' " + lf);
+            s.push("    or system_type_name = 'timestamp'" + lf);
+            s.push("    or system_type_name = 'rowversion';" + lf);
             s.push(lf);
             s.push("select @@columnList = STUFF((" + lf);
-            s.push("select ', [' + name + ']' from @@columns" + lf);
-            s.push("FOR XML PATH ('') ), 1, 1, '' )" + lf);
+            s.push("    select ', [' + name + ']' from @@columns" + lf);
+            s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
+            s.push("print @@columnList;" + lf);
             s.push(lf);
             s.push("select @@selectList = STUFF((" + lf);
-            s.push("select ', ' + case" + lf);
-            s.push("when system_type_name like '%varchar%' then ''' + coalesce(''N'''''' + ' + name + ' + '''''''', ''null'') + '''" + lf);
-            s.push("when system_type_name like '%char%' then ''' + coalesce(''N'''''' + rtrim(' + name + ') + '''''''', ''null'') + '''" + lf);
-            s.push("when system_type_name like 'date%' then ''' + coalesce('''''''' + CONVERT(varchar, ' + name + ', 127) + '''''''', ''null'') + '''" + lf);
-            s.push("else ''' + coalesce( + CONVERT(varchar, ' + name + '), ''null'') + ''' end" + lf);
-            s.push("from @@columns" + lf);
-            s.push("FOR XML PATH ('') ), 1, 1, '' )" + lf);
+            s.push("    select ', ' + case" + lf);
+            s.push("        when system_type_name like '%varchar%' then ''' + coalesce(''N'''''' + ' + name + ' + '''''''', ''null'') + '''" + lf);
+            s.push("        when system_type_name like '%char%' then ''' + coalesce(''N'''''' + rtrim(' + name + ') + '''''''', ''null'') + '''" + lf);
+            s.push("        when system_type_name like 'date%' then ''' + coalesce('''''''' + CONVERT(varchar, ' + name + ', 127) + '''''''', ''null'') + '''" + lf);
+            s.push("        else ''' + coalesce( + CONVERT(varchar, ' + name + '), ''null'') + ''' end" + lf);
+            s.push("    from @@columns" + lf);
+            s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
             s.push(lf);
-            s.push("select @@query = 'select ''insert into ' + @@tableName + ' (' + @@columnList + ') values (' + @@selectList + ')'' from (' + @@select + ') a';" + lf);
+            s.push("select @@query = 'select ''insert into ' + @@tableName + ' (' + @@columnList + ') values (' + @@selectList + ');'' from (' + @@select + ') a';" + lf);
             s.push("print @@query;" + lf);
             s.push(lf);
             s.push("exec (@@query);" + lf);
@@ -131,46 +136,46 @@
 
             s.push("DECLARE @@columns TABLE" + lf);
             s.push("(" + lf);
-            s.push("	is_hidden bit," + lf);
-            s.push("	column_ordinal int," + lf);
+            s.push("    is_hidden bit," + lf);
+            s.push("    column_ordinal int," + lf);
             s.push("    name nvarchar(max)," + lf);
             s.push("    is_nullable bit," + lf);
             s.push("    system_type_id int," + lf);
             s.push("    system_type_name nvarchar(128)," + lf);
             s.push("    max_length int," + lf);
-            s.push("	precision int," + lf);
-            s.push("	scale int," + lf);
-            s.push("	collation_name nvarchar(128)," + lf);
-            s.push("	user_type_id int," + lf);
-            s.push("	user_type_database nvarchar(128)," + lf);
-            s.push("	user_type_schema nvarchar(128)," + lf);
-            s.push("	user_type_name nvarchar(128)," + lf);
-            s.push("	assembly_qualified_type_name nvarchar(128)," + lf);
-            s.push("	xml_collection_id int," + lf);
-            s.push("	xml_collection_database nvarchar(128)," + lf);
-            s.push("	xml_collection_schema nvarchar(128)," + lf);
-            s.push("	xml_collection_name nvarchar(128)," + lf);
-            s.push("	is_xml_document bit," + lf);
-            s.push("	is_case_sensitive bit," + lf);
-            s.push("	is_fixed_length_clr_type bit," + lf);
-            s.push("	source_server nvarchar(128)," + lf);
-            s.push("	source_database nvarchar(128)," + lf);
-            s.push("	source_schema nvarchar(128)," + lf);
-            s.push("	source_table nvarchar(128)," + lf);
-            s.push("	source_column nvarchar(128)," + lf);
-            s.push("	is_identity_column bit," + lf);
-            s.push("	is_part_of_unique_key bit," + lf);
-            s.push("	is_updateable bit," + lf);
-            s.push("	is_computed_column bit," + lf);
-            s.push("	is_sparse_column_set bit," + lf);
-            s.push("	ordinal_in_order_by_list int," + lf);
-            s.push("	order_by_is_descending bit," + lf);
-            s.push("	order_by_list_length int," + lf);
-            s.push("	tds_type_id int," + lf);
-            s.push("	tds_length int," + lf);
-            s.push("	tds_collation_id int," + lf);
-            s.push("	tds_collation_sort_id int" + lf);
-            s.push(")" + lf);
+            s.push("    precision int," + lf);
+            s.push("    scale int," + lf);
+            s.push("    collation_name nvarchar(128)," + lf);
+            s.push("    user_type_id int," + lf);
+            s.push("    user_type_database nvarchar(128)," + lf);
+            s.push("    user_type_schema nvarchar(128)," + lf);
+            s.push("    user_type_name nvarchar(128)," + lf);
+            s.push("    assembly_qualified_type_name nvarchar(128)," + lf);
+            s.push("    xml_collection_id int," + lf);
+            s.push("    xml_collection_database nvarchar(128)," + lf);
+            s.push("    xml_collection_schema nvarchar(128)," + lf);
+            s.push("    xml_collection_name nvarchar(128)," + lf);
+            s.push("    is_xml_document bit," + lf);
+            s.push("    is_case_sensitive bit," + lf);
+            s.push("    is_fixed_length_clr_type bit," + lf);
+            s.push("    source_server nvarchar(128)," + lf);
+            s.push("    source_database nvarchar(128)," + lf);
+            s.push("    source_schema nvarchar(128)," + lf);
+            s.push("    source_table nvarchar(128)," + lf);
+            s.push("    source_column nvarchar(128)," + lf);
+            s.push("    is_identity_column bit," + lf);
+            s.push("    is_part_of_unique_key bit," + lf);
+            s.push("    is_updateable bit," + lf);
+            s.push("    is_computed_column bit," + lf);
+            s.push("    is_sparse_column_set bit," + lf);
+            s.push("    ordinal_in_order_by_list int," + lf);
+            s.push("    order_by_is_descending bit," + lf);
+            s.push("    order_by_list_length int," + lf);
+            s.push("    tds_type_id int," + lf);
+            s.push("    tds_length int," + lf);
+            s.push("    tds_collation_id int," + lf);
+            s.push("    tds_collation_sort_id int" + lf);
+            s.push(");" + lf);
 
             return s.join('');
         }

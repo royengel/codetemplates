@@ -37,7 +37,8 @@ body {
 }
 
 .panel-body {
-    padding: 5px;
+    padding: 0px;
+    margin: 0px;
 }
 #txtScript {
     width: 100%;
