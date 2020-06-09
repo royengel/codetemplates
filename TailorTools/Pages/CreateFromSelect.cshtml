@@ -48,6 +48,10 @@
             document.getElementById("txtScript").select();
         }
 
+        String.prototype.replaceAll = function (str1, str2, ignore) {
+            return this.replace(new RegExp(str1.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, "\\$&"), (ignore ? "gi" : "g")), (typeof (str2) == "string") ? str2.replace(/\$/g, "$$$$") : str2);
+        } 
+
         function makeScript() {
             var createQuery = document.getElementById('createQuery'),
                 insertQuery = document.getElementById('insertQuery'),
@@ -60,7 +64,7 @@
             var s = [],
                 lf = '<br>';
             s.push("declare @@select nvarchar(max);" + lf);
-            s.push("select @@select = N'" + select.replace("'", "''") + "';" + lf);
+            s.push("select @@select = N'" + select.replaceAll("'", "''") + "';" + lf);
             s.push(lf);
             s.push(columnsTable());
             s.push(lf);
@@ -84,7 +88,7 @@
             var s = [],
                 lf = '<br>';
             s.push("declare @@select nvarchar(max);" + lf);
-            s.push("select @@select = N'" + select.replace("'", "''") + "';" + lf);
+            s.push("select @@select = N'" + select.replaceAll("'", "''") + "';" + lf);
             s.push(lf);
             s.push(columnsTable());
             s.push("declare @@tableName nvarchar(128);" + lf);
@@ -108,7 +112,7 @@
             s.push("    or system_type_name = 'rowversion';" + lf);
             s.push(lf);
             s.push("select @@columnList = STUFF((" + lf);
-            s.push("    select ', [' + name + ']' from @@columns" + lf);
+            s.push("    select ', [' + name + ']' from @@columns where is_hidden = 0" + lf);
             s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
             s.push("print @@columnList;" + lf);
             s.push(lf);
@@ -118,7 +122,7 @@
             s.push("        when system_type_name like '%char%' then ''' + coalesce(''N'''''' + rtrim(' + name + ') + '''''''', ''null'') + '''" + lf);
             s.push("        when system_type_name like 'date%' then ''' + coalesce('''''''' + CONVERT(varchar, ' + name + ', 127) + '''''''', ''null'') + '''" + lf);
             s.push("        else ''' + coalesce( + CONVERT(varchar, ' + name + '), ''null'') + ''' end" + lf);
-            s.push("    from @@columns" + lf);
+            s.push("    from @@columns where is_hidden = 0" + lf);
             s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
             s.push(lf);
             s.push("select @@query = 'select ''insert into ' + @@tableName + ' (' + @@columnList + ') values (' + @@selectList + ');'' from (' + @@select + ') a';" + lf);
