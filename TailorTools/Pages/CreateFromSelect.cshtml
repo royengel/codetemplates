@@ -3,44 +3,57 @@
 @{
     ViewData["Title"] = "Select Templates";
 }
-<div class="container">
-    <div class="row">
-        <div class="col-lg-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">Put your select here:</div>
-                <div class="panel-body" id="pasteMeta">
-                    <textarea id="txtScript" autofocus onfocus="this.select();" rows="15"
-                              onkeyup="if(event.keyCode==13) makeScript();"
-                              onchange="makeScript();">Paste your sql "SELECT * FROM..." query here...</textarea>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Put your select here:</div>
+                    <div class="panel-body" id="pasteMeta">
+                        <textarea id="txtScript" autofocus onfocus="this.select();" rows="15"
+                                  onkeyup="if(event.keyCode==13) makeScript();"
+                                  onchange="makeScript();">Paste your sql "SELECT * FROM..." query here...</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Create table from select
+                        <button class="copy-btn" data-clipboard-target="#createQuery">
+                            <img src="images/clipboard.svg" alt="Copy to clipboard">
+                        </button>
+                    </div>
+                    <pre class="panel-body" id="createQuery"></pre>
+                    <div style="font-style: italic; padding: 6px;">...bring the results from this TSQL, back to Templates.</div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Insert into from select
+                        <button class="copy-btn" data-clipboard-target="#insertQuery">
+                            <img src="images/clipboard.svg" alt="Copy to clipboard">
+                        </button>
+                    </div>
+                    <pre class="panel-body" id="insertQuery"></pre>
+                    <div style="font-style: italic; padding: 6px;">...select your insert statements with this query.</div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    Create table from select
-                    <button class="copy-btn" data-clipboard-target="#createQuery">
-                        <img src="images/clipboard.svg" alt="Copy to clipboard">
-                    </button>
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        C# initializer from select
+                        <button class="copy-btn" data-clipboard-target="#csInitQuery">
+                            <img src="images/clipboard.svg" alt="Copy to clipboard">
+                        </button>
+                    </div>
+                    <pre class="panel-body" id="csInitQuery"></pre>
                 </div>
-                <pre class="panel-body" id="createQuery"></pre>
-                <div style="font-style: italic; padding: 6px;">...bring the results from this TSQL, back to Templates.</div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    Insert into from select
-                    <button class="copy-btn" data-clipboard-target="#insertQuery">
-                        <img src="images/clipboard.svg" alt="Copy to clipboard">
-                    </button>
-                </div>
-                <pre class="panel-body" id="insertQuery"></pre>
-                <div style="font-style: italic; padding: 6px;">...select your insert statements with this query.</div>
             </div>
         </div>
     </div>
-</div>
 @section Scripts
 {
     <script>
@@ -50,14 +63,16 @@
 
         String.prototype.replaceAll = function (str1, str2, ignore) {
             return this.replace(new RegExp(str1.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, "\\$&"), (ignore ? "gi" : "g")), (typeof (str2) == "string") ? str2.replace(/\$/g, "$$$$") : str2);
-        } 
+        }
 
         function makeScript() {
             var createQuery = document.getElementById('createQuery'),
                 insertQuery = document.getElementById('insertQuery'),
+                csInitQuery = document.getElementById('csInitQuery'),
                 txtScript = document.getElementById('txtScript');
             createQuery.innerHTML = createQueryScript(txtScript.value);
             insertQuery.innerHTML = createInsertScript(txtScript.value);
+            csInitQuery.innerHTML = createCSharpInitScript(txtScript.value);
         }
 
         function createQueryScript(select) {
@@ -74,12 +89,12 @@
             s.push("declare @@tableName nvarchar(128);" + lf);
             s.push("select @@tableName = N'TableName';" + lf);
             s.push(lf);
-            s.push("SELECT ' create table ' + @@tableName + ' ( ' " + lf);
+            s.push("select top 1 'create table ' + @@tableName + ' ( ' " + lf);
             s.push("	+ STUFF(( " + lf);
             s.push("		select ', ' + name + ' ' + system_type_name + case when is_nullable = 0 then ' not' else ' ' end + ' null' from @@columns " + lf);
             s.push("		FOR XML PATH ('') ), 1, 1, '' ) " + lf);
             s.push("	+ ')'" + lf);
-            s.push("from @@columns group by is_hidden" + lf);
+            s.push("from @@columns where is_hidden = 0" + lf);
 
             return s.join('');
         }
@@ -99,6 +114,12 @@
             s.push("insert into @@columns" + lf);
             s.push("    exec sp_describe_first_result_set @@select, null, 1;" + lf);
             s.push(lf);
+            s.push("delete from @@columns " + lf);
+            s.push("    where name = 'agrtid' " + lf);
+            s.push("    or is_hidden != 0" + lf);
+            s.push("    or system_type_name = 'timestamp'" + lf);
+            s.push("    or system_type_name = 'rowversion';" + lf);
+            s.push(lf);
             s.push("select top 1  @@tableName = '[' + source_schema + '].[' + source_table + ']' from @@columns where source_table is not null;" + lf);
             s.push("if @@tableName is null" + lf);
             s.push("begin" + lf);
@@ -106,13 +127,8 @@
             s.push("end;" + lf);
             s.push("print @@tableName;" + lf);
             s.push(lf);
-            s.push("delete from @@columns " + lf);
-            s.push("    where name = 'agrtid' " + lf);
-            s.push("    or system_type_name = 'timestamp'" + lf);
-            s.push("    or system_type_name = 'rowversion';" + lf);
-            s.push(lf);
             s.push("select @@columnList = STUFF((" + lf);
-            s.push("    select ', [' + name + ']' from @@columns where is_hidden = 0" + lf);
+            s.push("    select ', [' + name + ']' from @@columns" + lf);
             s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
             s.push("print @@columnList;" + lf);
             s.push(lf);
@@ -122,10 +138,55 @@
             s.push("        when system_type_name like '%char%' then ''' + coalesce(''N'''''' + rtrim(' + name + ') + '''''''', ''null'') + '''" + lf);
             s.push("        when system_type_name like 'date%' then ''' + coalesce('''''''' + CONVERT(varchar, ' + name + ', 127) + '''''''', ''null'') + '''" + lf);
             s.push("        else ''' + coalesce( + CONVERT(varchar, ' + name + '), ''null'') + ''' end" + lf);
-            s.push("    from @@columns where is_hidden = 0" + lf);
+            s.push("    from @@columns" + lf);
             s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
             s.push(lf);
             s.push("select @@query = 'select ''insert into ' + @@tableName + ' (' + @@columnList + ') values (' + @@selectList + ');'' from (' + @@select + ') a';" + lf);
+            s.push("print @@query;" + lf);
+            s.push(lf);
+            s.push("exec (@@query);" + lf);
+
+            return s.join('');
+        }
+
+        function createCSharpInitScript(select) {
+            var s = [],
+                lf = '<br>';
+            s.push("declare @@select nvarchar(max);" + lf);
+            s.push("select @@select = N'" + select.replaceAll("'", "''") + "';" + lf);
+            s.push(lf);
+            s.push(columnsTable());
+            s.push("declare @@className nvarchar(128);" + lf);
+            s.push("declare @@initList nvarchar(max);" + lf);
+            s.push("declare @@query nvarchar(max);" + lf);
+            s.push(lf);
+            s.push("insert into @@columns" + lf);
+            s.push("    exec sp_describe_first_result_set @@select, null, 1;" + lf);
+            s.push(lf);
+            s.push("select top 1  @@className = source_table from @@columns where source_table is not null;" + lf);
+            s.push("if @@className is null" + lf);
+            s.push("begin" + lf);
+            s.push("    select @@className = 'class1';" + lf);
+            s.push("end;" + lf);
+            s.push("print @@className;" + lf);
+            s.push(lf);
+            s.push("delete from @@columns " + lf);
+            s.push("    where name = 'agrtid' " + lf);
+            s.push("    or is_hidden != 0" + lf);
+            s.push("    or system_type_name = 'timestamp'" + lf);
+            s.push("    or system_type_name = 'rowversion';" + lf);
+            s.push(lf);
+            s.push("select @@initList = STUFF((" + lf);
+            s.push("    select ', ' + name + ' = ' + case" + lf);
+            s.push("        when system_type_name like '%varchar%' then ''' + coalesce(''\x22'' + ' + name + ' + ''\x22'', ''null'') + '''" + lf);
+            s.push("        when system_type_name like '%char%' then ''' + coalesce(''\x22'' + rtrim(' + name + ') + ''\x22'', ''null'') + '''" + lf);
+            s.push("        when system_type_name like 'date%' then ''' + coalesce(''new DateTime('' + FORMAT(' + name + ', ''yyyy, MM, dd, HH, mm, ss, fff'') + '')'', ''null'') + '''" + lf);
+            s.push("        else ''' + coalesce( + CONVERT(varchar, ' + name + '), ''null'') + ''' end" + lf);
+            s.push("    from @@columns" + lf);
+            s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
+            s.push(lf);
+            s.push("select @@query = 'select ''new ' + @@className + ' { ' + @@initList + ' },'' from (' + @@select + ') a';" + lf);
+            s.push(lf);
             s.push("print @@query;" + lf);
             s.push(lf);
             s.push("exec (@@query);" + lf);
