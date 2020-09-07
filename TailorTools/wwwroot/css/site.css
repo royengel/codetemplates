@@ -39,6 +39,8 @@ body {
 .panel-body {
     padding: 0px;
     margin: 0px;
+    max-height: 305px;
+    height: auto;
 }
 #txtScript {
     width: 100%;
