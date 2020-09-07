@@ -305,7 +305,7 @@
             sqlValueOfGenerateContext(s, lf, "s.[' + name + ']");
             s.push("    from @@columns " + lf);
             s.push("    where source_table is not null " + lf);
-            s.push("    order by case when [name] = 'gid' then 1 when [name] = 'id' then 3 when [name] like '%id' then 2 when [name] like '%name%' then 4 else column_ordinal + 10 end;" + lf);
+            s.push("    order by case when [name] = 'gid' then 2 when [name] = 'id' then 3 when [name] like '%id' then 4 when [name] like '%name%' then 5 else 10 end, column_ordinal;" + lf);
             s.push("print 'Id column name: ' + @@idColumn;" + lf);
             s.push("print 'Value of Id column: ' + @@valueOfIdColumn;" + lf);
         }
