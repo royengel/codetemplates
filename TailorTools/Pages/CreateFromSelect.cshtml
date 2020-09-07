@@ -52,6 +52,17 @@
                     <pre class="panel-body" id="csInitQuery"></pre>
                 </div>
             </div>
+            <div class="col-lg-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Diff from select
+                        <button class="copy-btn" data-clipboard-target="#csDiffQuery">
+                            <img src="images/clipboard.svg" alt="Copy to clipboard">
+                        </button>
+                    </div>
+                    <pre class="panel-body" id="csDiffQuery"></pre>
+                </div>
+            </div>
         </div>
     </div>
 @section Scripts
@@ -65,14 +76,24 @@
             return this.replace(new RegExp(str1.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, "\\$&"), (ignore ? "gi" : "g")), (typeof (str2) == "string") ? str2.replace(/\$/g, "$$$$") : str2);
         }
 
+        function add(func) {
+            var s = [],
+                lf = '<br>';
+            func(s, lf);
+            s.push(lf);
+            return s.join('');
+        }
+
         function makeScript() {
             var createQuery = document.getElementById('createQuery'),
                 insertQuery = document.getElementById('insertQuery'),
                 csInitQuery = document.getElementById('csInitQuery'),
+                csDiffQuery = document.getElementById('csDiffQuery'),
                 txtScript = document.getElementById('txtScript');
             createQuery.innerHTML = createQueryScript(txtScript.value);
             insertQuery.innerHTML = createInsertScript(txtScript.value);
             csInitQuery.innerHTML = createCSharpInitScript(txtScript.value);
+            csDiffQuery.innerHTML = createDiffScript(txtScript.value);
         }
 
         function createQueryScript(select) {
@@ -81,14 +102,9 @@
             s.push("declare @@select nvarchar(max);" + lf);
             s.push("select @@select = N'" + select.replaceAll("'", "''") + "';" + lf);
             s.push(lf);
-            s.push(columnsTable());
+            s.push(add(columnsTable));
             s.push(lf);
-            s.push("insert into @@columns" + lf);
-            s.push("EXEC sp_describe_first_result_set @@select" + lf);
-            s.push(lf);
-            s.push("declare @@tableName nvarchar(128);" + lf);
-            s.push("select @@tableName = N'TableName';" + lf);
-            s.push(lf);
+            s.push(add(tableName));
             s.push("select top 1 'create table ' + @@tableName + ' ( ' " + lf);
             s.push("	+ STUFF(( " + lf);
             s.push("		select ', ' + name + ' ' + system_type_name + case when is_nullable = 0 then ' not' else ' ' end + ' null' from @@columns " + lf);
@@ -105,42 +121,20 @@
             s.push("declare @@select nvarchar(max);" + lf);
             s.push("select @@select = N'" + select.replaceAll("'", "''") + "';" + lf);
             s.push(lf);
-            s.push(columnsTable());
-            s.push("declare @@tableName nvarchar(128);" + lf);
-            s.push("declare @@columnList nvarchar(max);" + lf);
-            s.push("declare @@selectList nvarchar(max);" + lf);
-            s.push("declare @@query nvarchar(max);" + lf);
-            s.push(lf);
-            s.push("insert into @@columns" + lf);
-            s.push("    exec sp_describe_first_result_set @@select, null, 1;" + lf);
-            s.push(lf);
+            s.push(add(columnsTable));
             s.push("delete from @@columns " + lf);
             s.push("    where name = 'agrtid' " + lf);
             s.push("    or is_hidden != 0" + lf);
             s.push("    or system_type_name = 'timestamp'" + lf);
             s.push("    or system_type_name = 'rowversion';" + lf);
             s.push(lf);
-            s.push("select top 1  @@tableName = '[' + source_schema + '].[' + source_table + ']' from @@columns where source_table is not null;" + lf);
-            s.push("if @@tableName is null" + lf);
-            s.push("begin" + lf);
-            s.push("    select @@tableName = 'table1';" + lf);
-            s.push("end;" + lf);
-            s.push("print @@tableName;" + lf);
+            s.push(add(tableName));
+            s.push(columnList(s, lf, "columnList", "s[' + name + ']"));
             s.push(lf);
-            s.push("select @@columnList = STUFF((" + lf);
-            s.push("    select ', [' + name + ']' from @@columns" + lf);
-            s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
-            s.push("print @@columnList;" + lf);
+            s.push(selectList(s, lf, "selectList", "[' + name + ']"));
             s.push(lf);
-            s.push("select @@selectList = STUFF((" + lf);
-            s.push("    select ', ' + case" + lf);
-            s.push("        when system_type_name like '%varchar%' then ''' + coalesce(''N'''''' + ' + name + ' + '''''''', ''null'') + '''" + lf);
-            s.push("        when system_type_name like '%char%' then ''' + coalesce(''N'''''' + rtrim(' + name + ') + '''''''', ''null'') + '''" + lf);
-            s.push("        when system_type_name like 'date%' then ''' + coalesce('''''''' + CONVERT(varchar, ' + name + ', 127) + '''''''', ''null'') + '''" + lf);
-            s.push("        else ''' + coalesce( + CONVERT(varchar, ' + name + '), ''null'') + ''' end" + lf);
-            s.push("    from @@columns" + lf);
-            s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
-            s.push(lf);
+            s.push(add(selectList));
+            s.push("declare @@query nvarchar(max);" + lf);
             s.push("select @@query = 'select ''insert into ' + @@tableName + ' (' + @@columnList + ') values (' + @@selectList + ');'' from (' + @@select + ') a';" + lf);
             s.push("print @@query;" + lf);
             s.push(lf);
@@ -155,13 +149,10 @@
             s.push("declare @@select nvarchar(max);" + lf);
             s.push("select @@select = N'" + select.replaceAll("'", "''") + "';" + lf);
             s.push(lf);
-            s.push(columnsTable());
+            s.push(add(columnsTable));
             s.push("declare @@className nvarchar(128);" + lf);
             s.push("declare @@initList nvarchar(max);" + lf);
             s.push("declare @@query nvarchar(max);" + lf);
-            s.push(lf);
-            s.push("insert into @@columns" + lf);
-            s.push("    exec sp_describe_first_result_set @@select, null, 1;" + lf);
             s.push(lf);
             s.push("select top 1  @@className = source_table from @@columns where source_table is not null;" + lf);
             s.push("if @@className is null" + lf);
@@ -194,11 +185,64 @@
             return s.join('');
         }
 
-
-        function columnsTable() {
+        function createDiffScript(select) {
             var s = [],
                 lf = '<br>';
+            s.push("declare @@sourceSelect nvarchar(max);" + lf);
+            s.push("declare @@select nvarchar(max);" + lf);
+            s.push("select @@sourceSelect = N'" + select.replaceAll("'", "''") + "';" + lf);
+            s.push("select @@select = N'" + select.replaceAll("'", "''") + "';" + lf);
+            s.push(lf);
+            s.push(add(columnsTable));
+            s.push("delete from @@columns " + lf);
+            s.push("    where name = 'agrtid' " + lf);
+            s.push("    or is_hidden != 0" + lf);
+            s.push("    or system_type_name = 'timestamp'" + lf);
+            s.push("    or system_type_name = 'rowversion';" + lf);
+            s.push(lf);
+            s.push(add(tableName));
+            s.push(add(idColumn));
+            s.push(columnList(s, lf, "columnList", "[' + name + ']"));
+            s.push(lf);
+            s.push(columnList(s, lf, "sourceColumnList", "s.[' + name + ']"));
+            s.push(lf);
+            s.push(columnList(s, lf, "targetColumnList", "t.[' + name + ']"));
+            s.push(lf);
+            s.push(selectList(s, lf, "insertValues", "t.[' + name + ']"));
+            s.push(lf);
+            updateList(s, lf, "updateList");
+            s.push(lf);
+            s.push("declare @@query nvarchar(max);" + lf);
+            s.push("select @@query = 'select case when t.[' + @@idColumn + '] is null then '" + lf);
+            s.push("  + '''delete from ' + @@tableName + ' where [' + @@idColumn + '] = ' + @@valueOfIdColumn + ';'' '" + lf);
+            s.push("  + 'when s.[' + @@idColumn + '] is null then '" + lf);
+            s.push("  + '''insert into ' + @@tableName + ' (' + @@columnList + ') values (' + @@insertValues + ');'' '" + lf);
+            s.push("  + 'else '" + lf);
+            s.push("  + '''update[ARS].[Users] set '' '" + lf);
+            s.push("  + '+ STUFF('" + lf);
+            s.push("  + @@updateList" + lf);
+            s.push("  + ', 1, 2, '''')'" + lf);
+            s.push("  + '+ '' where [' + @@idColumn + '] = ' + @@valueOfIdColumn + ';'' '" + lf);
+            s.push("  + ''" + lf);
+            s.push("  + ''" + lf);
+            s.push("  + 'end as Change '" + lf);
+            s.push("  + 'from (' + @@sourceSelect + ') s '" + lf);
+            s.push("  + 'full outer join (' + @@select + ') t on(s.' + @@idColumn + ' = t.' + @@idColumn + ') '" + lf);
+            s.push("  + 'where '" + lf);
+            s.push("  + 'exists( '" + lf);
+            s.push("  + '    select ' + @@sourceColumnList + ' '" + lf);
+            s.push("  + 'except '" + lf);
+            s.push("  + '    select ' + @@targetColumnList + ') '" + lf);
 
+            s.push("print 'Query: ' + @@query;" + lf);
+            s.push(lf);
+            s.push("exec (@@query);" + lf);
+
+            return s.join('');
+        }
+
+
+        function columnsTable(s, lf) {
             s.push("DECLARE @@columns TABLE" + lf);
             s.push("(" + lf);
             s.push("    is_hidden bit," + lf);
@@ -241,10 +285,69 @@
             s.push("    tds_collation_id int," + lf);
             s.push("    tds_collation_sort_id int" + lf);
             s.push(");" + lf);
-
-            return s.join('');
+            s.push("insert into @@columns" + lf);
+            s.push("    exec sp_describe_first_result_set @@select, null, 1;" + lf);
         }
 
+        function tableName(s, lf) {
+            s.push("declare @@tableName nvarchar(128);" + lf);
+            s.push("select top 1  @@tableName = '[' + source_schema + '].[' + source_table + ']' from @@columns where source_table is not null;" + lf);
+            s.push("if @@tableName is null" + lf);
+            s.push("begin" + lf);
+            s.push("    select @@tableName = 'table1';" + lf);
+            s.push("end;" + lf);
+            s.push("print 'Table name: ' + @@tableName;" + lf);
+        }
+
+        function idColumn(s, lf) {
+            s.push("declare @@idColumn nvarchar(128);" + lf);
+            s.push("declare @@valueOfIdColumn nvarchar(1000);" + lf);
+            s.push("select top 1  @@idColumn = [name]," + lf);
+            s.push("    @@valueOfIdColumn = " + lf);
+            sqlValueOfGenerateContext(s, lf, "s.[' + name + ']");
+            s.push("    from @@columns " + lf);
+            s.push("    where source_table is not null " + lf);
+            s.push("    order by case when [name] = 'gid' then 1 when [name] = 'id' then 3 when [name] like '%id' then 2 when [name] like '%name%' then 4 else column_ordinal + 10 end;" + lf);
+            s.push("print 'Id column name: ' + @@idColumn;" + lf);
+            s.push("print 'Value of Id column: ' + @@valueOfIdColumn;" + lf);
+        }
+
+        function columnList(s, lf, varName, name) {
+            s.push("declare @@" + varName + " nvarchar(max);" + lf);
+            s.push("select @@" + varName + " = STUFF((" + lf);
+            s.push("    select ', " + name + "' from @@columns" + lf);
+            s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
+            s.push("print 'Column list (" + varName + "): ' + @@" + varName + ";" + lf);
+        }
+
+        function selectList(s, lf, varName, name) {
+            s.push("declare @@" + varName + " nvarchar(max);" + lf);
+            s.push("select @@" + varName + " = STUFF((" + lf);
+            s.push("    select ', ' + " + lf);
+            sqlValueOfGenerateContext(s, lf, name);
+            s.push("    from @@columns" + lf);
+            s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
+            s.push("print 'Select list (" + varName + "): ' + @@" + varName + ";" + lf);
+        }
+
+        function updateList(s, lf, varName) {
+            s.push("declare @@" + varName + " nvarchar(max);" + lf);
+            s.push("select @@" + varName + " = STUFF((" + lf);
+            s.push("    select '+ case when exists ( select t.[' + name + '] except select s.[' + name + ']) then '', [' + name + '] = ' +" + lf);
+            sqlValueOfGenerateContext(s, lf, "s.[' + name + ']");
+            s.push("+ ''' else '''' end '" + lf);
+            s.push("    from @@columns" + lf);
+            s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
+            s.push("print 'Update list (" + varName + "): ' + @@" + varName + ";" + lf);
+        }
+
+        function sqlValueOfGenerateContext(s, lf, name) {
+            s.push("        case when system_type_name like '%varchar%' then ''' + coalesce(''N'''''' + " + name + " + '''''''', ''null'') + '''" + lf);
+            s.push("             when system_type_name like '%char%' then ''' + coalesce(''N'''''' + rtrim(" + name + ") + '''''''', ''null'') + '''" + lf);
+            s.push("             when system_type_name like 'date%' then ''' + coalesce('''''''' + CONVERT(varchar, " + name + ", 127) + '''''''', ''null'') + '''" + lf);
+            s.push("             when system_type_name = 'uniqueidentifier' then ''' + coalesce('''''''' + CONVERT(varchar(36), " + name + ", 127) + '''''''', ''null'') + '''" + lf);
+            s.push("             else ''' + coalesce( + CONVERT(varchar, " + name + "), ''null'') + ''' end" + lf);
+        }
 
     </script>
 }
