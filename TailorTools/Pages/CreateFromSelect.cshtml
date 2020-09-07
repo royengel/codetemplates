@@ -129,11 +129,9 @@
             s.push("    or system_type_name = 'rowversion';" + lf);
             s.push(lf);
             s.push(add(tableName));
-            s.push(columnList(s, lf, "columnList", "s[' + name + ']"));
+            s.push(columnList(s, lf, "columnList", "s.[' + name + ']", true));
             s.push(lf);
-            s.push(selectList(s, lf, "selectList", "[' + name + ']"));
-            s.push(lf);
-            s.push(add(selectList));
+            s.push(selectList(s, lf, "selectList", "[' + name + ']", true));
             s.push("declare @@query nvarchar(max);" + lf);
             s.push("select @@query = 'select ''insert into ' + @@tableName + ' (' + @@columnList + ') values (' + @@selectList + ');'' from (' + @@select + ') a';" + lf);
             s.push("print @@query;" + lf);
@@ -202,13 +200,13 @@
             s.push(lf);
             s.push(add(tableName));
             s.push(add(idColumn));
-            s.push(columnList(s, lf, "columnList", "[' + name + ']"));
+            s.push(columnList(s, lf, "columnList", "[' + name + ']", true));
             s.push(lf);
-            s.push(columnList(s, lf, "sourceColumnList", "s.[' + name + ']"));
+            s.push(columnList(s, lf, "sourceColumnList", "s.[' + name + ']", true));
             s.push(lf);
-            s.push(columnList(s, lf, "targetColumnList", "t.[' + name + ']"));
+            s.push(columnList(s, lf, "targetColumnList", "t.[' + name + ']", true));
             s.push(lf);
-            s.push(selectList(s, lf, "insertValues", "t.[' + name + ']"));
+            s.push(selectList(s, lf, "insertValues", "t.[' + name + ']", true));
             s.push(lf);
             updateList(s, lf, "updateList");
             s.push(lf);
@@ -312,20 +310,24 @@
             s.push("print 'Value of Id column: ' + @@valueOfIdColumn;" + lf);
         }
 
-        function columnList(s, lf, varName, name) {
+        function columnList(s, lf, varName, name, omitIdentityColumns) {
             s.push("declare @@" + varName + " nvarchar(max);" + lf);
             s.push("select @@" + varName + " = STUFF((" + lf);
             s.push("    select ', " + name + "' from @@columns" + lf);
+            if (omitIdentityColumns)
+                s.push("    where is_identity_column != 1" + lf);
             s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
             s.push("print 'Column list (" + varName + "): ' + @@" + varName + ";" + lf);
         }
 
-        function selectList(s, lf, varName, name) {
+        function selectList(s, lf, varName, name, omitIdentityColumns) {
             s.push("declare @@" + varName + " nvarchar(max);" + lf);
             s.push("select @@" + varName + " = STUFF((" + lf);
             s.push("    select ', ' + " + lf);
             sqlValueOfGenerateContext(s, lf, name);
             s.push("    from @@columns" + lf);
+            if (omitIdentityColumns)
+                s.push("    where is_identity_column != 1" + lf);
             s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
             s.push("print 'Select list (" + varName + "): ' + @@" + varName + ";" + lf);
         }
