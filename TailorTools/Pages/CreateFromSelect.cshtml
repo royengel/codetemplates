@@ -216,7 +216,7 @@
             s.push("  + 'when s.[' + @@idColumn + '] is null then '" + lf);
             s.push("  + '''insert into ' + @@tableName + ' (' + @@columnList + ') values (' + @@insertValues + ');'' '" + lf);
             s.push("  + 'else '" + lf);
-            s.push("  + '''update[ARS].[Users] set '' '" + lf);
+            s.push("  + '''update ' + @@tableName + ' set '' '" + lf);
             s.push("  + '+ STUFF('" + lf);
             s.push("  + @@updateList" + lf);
             s.push("  + ', 1, 2, '''')'" + lf);
@@ -336,7 +336,7 @@
             s.push("declare @@" + varName + " nvarchar(max);" + lf);
             s.push("select @@" + varName + " = STUFF((" + lf);
             s.push("    select '+ case when exists ( select t.[' + name + '] except select s.[' + name + ']) then '', [' + name + '] = ' +" + lf);
-            sqlValueOfGenerateContext(s, lf, "s.[' + name + ']");
+            sqlValueOfGenerateContext(s, lf, "t.[' + name + ']");
             s.push("+ ''' else '''' end '" + lf);
             s.push("    from @@columns" + lf);
             s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
