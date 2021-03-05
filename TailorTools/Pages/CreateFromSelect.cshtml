@@ -336,7 +336,7 @@
             s.push("declare @@" + varName + " nvarchar(max);" + lf);
             s.push("select @@" + varName + " = STUFF((" + lf);
             s.push("    select '+ case when exists ( select t.[' + name + '] except select s.[' + name + ']) then '', [' + name + '] = ' +" + lf);
-            sqlValueOfGenerateContext(s, lf, "t.[' + name + ']");
+            sqlValueOfGenerateContext(s, lf, "s.[' + name + ']");
             s.push("+ ''' else '''' end '" + lf);
             s.push("    from @@columns" + lf);
             s.push("    FOR XML PATH ('') ), 1, 2, '' );" + lf);
