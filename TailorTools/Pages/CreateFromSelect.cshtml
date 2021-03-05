@@ -206,14 +206,14 @@
             s.push(lf);
             s.push(columnList(s, lf, "targetColumnList", "t.[' + name + ']", true));
             s.push(lf);
-            s.push(selectList(s, lf, "insertValues", "t.[' + name + ']", true));
+            s.push(selectList(s, lf, "insertValues", "s.[' + name + ']", true));
             s.push(lf);
             updateList(s, lf, "updateList");
             s.push(lf);
             s.push("declare @@query nvarchar(max);" + lf);
-            s.push("select @@query = 'select case when t.[' + @@idColumn + '] is null then '" + lf);
+            s.push("select @@query = 'select case when s.[' + @@idColumn + '] is null then '" + lf);
             s.push("  + '''delete from ' + @@tableName + ' where [' + @@idColumn + '] = ' + @@valueOfIdColumn + ';'' '" + lf);
-            s.push("  + 'when s.[' + @@idColumn + '] is null then '" + lf);
+            s.push("  + 'when t.[' + @@idColumn + '] is null then '" + lf);
             s.push("  + '''insert into ' + @@tableName + ' (' + @@columnList + ') values (' + @@insertValues + ');'' '" + lf);
             s.push("  + 'else '" + lf);
             s.push("  + '''update ' + @@tableName + ' set '' '" + lf);
@@ -302,7 +302,7 @@
             s.push("declare @@valueOfIdColumn nvarchar(1000);" + lf);
             s.push("select top 1  @@idColumn = [name]," + lf);
             s.push("    @@valueOfIdColumn = " + lf);
-            sqlValueOfGenerateContext(s, lf, "s.[' + name + ']");
+            sqlValueOfGenerateContext(s, lf, "t.[' + name + ']");
             s.push("    from @@columns " + lf);
             s.push("    where source_table is not null " + lf);
             s.push("    order by case when [name] = 'gid' then 2 when [name] = 'id' then 3 when [name] like '%id' then 4 when [name] like '%name%' then 5 else 10 end, column_ordinal;" + lf);
@@ -344,8 +344,8 @@
         }
 
         function sqlValueOfGenerateContext(s, lf, name) {
-            s.push("        case when system_type_name like '%varchar%' then ''' + coalesce(''N'''''' + " + name + " + '''''''', ''null'') + '''" + lf);
-            s.push("             when system_type_name like '%char%' then ''' + coalesce(''N'''''' + rtrim(" + name + ") + '''''''', ''null'') + '''" + lf);
+            s.push("        case when system_type_name like '%varchar%' then ''' + coalesce(''N'''''' + replace(" + name + ", '''''''', '''''''''''') + '''''''', ''null'') + '''" + lf);
+            s.push("             when system_type_name like '%char%' then ''' + coalesce(''N'''''' + replace(rtrim(" + name + "), '''''''', '''''''''''') + '''''''', ''null'') + '''" + lf);
             s.push("             when system_type_name like 'date%' then ''' + coalesce('''''''' + CONVERT(varchar, " + name + ", 127) + '''''''', ''null'') + '''" + lf);
             s.push("             when system_type_name = 'uniqueidentifier' then ''' + coalesce('''''''' + CONVERT(varchar(36), " + name + ", 127) + '''''''', ''null'') + '''" + lf);
             s.push("             else ''' + coalesce( + CONVERT(varchar, " + name + "), ''null'') + ''' end" + lf);
