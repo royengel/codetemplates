@@ -1,13 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2046
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TailorTools", "TailorTools\TailorTools.csproj", "{A0F4DDB6-AB3F-4241-9405-72D974C32ED3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TailorTools", "TailorTools\TailorTools.csproj", "{A0F4DDB6-AB3F-4241-9405-72D974C32ED3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TailorTools.Props", "TailorTools.Props\TailorTools.Props.csproj", "{8B0F5DCE-F28B-4F03-9E61-5E63C3D57348}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TailorTools.Props", "TailorTools.Props\TailorTools.Props.csproj", "{8B0F5DCE-F28B-4F03-9E61-5E63C3D57348}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TailorTools.PropsTests", "TailorTools.PropsTests\TailorTools.PropsTests.csproj", "{D0F24DFF-3D70-443C-9BA4-241FBDD2BDC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TailorTools.PropsTests", "TailorTools.PropsTests\TailorTools.PropsTests.csproj", "{D0F24DFF-3D70-443C-9BA4-241FBDD2BDC2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{257EC72D-538F-4D49-8A9B-CCD35434F791}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		azure-pipelines.yml = azure-pipelines.yml
+		LICENSE = LICENSE
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
