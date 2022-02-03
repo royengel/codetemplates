@@ -29,7 +29,6 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
-    arguments: '--configuration $(BuildConfiguration) --framework $(dotNetFramework)'
 
 - task: DotNetCoreCLI@2
   inputs:
@@ -38,7 +37,7 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'publish'
-    arguments: '--configuration $(BuildConfiguration) --framework $(dotNetFramework) --output $(Build.ArtifactStagingDirectory)'
+    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
     publishWebProjects: true
 
 - task: PublishBuildArtifacts@1
